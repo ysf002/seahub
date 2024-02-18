@@ -76,7 +76,7 @@ class Info extends Component {
     let { license_mode, license_to, license_expiration, org_count,
       repos_count, total_files_count, total_storage, total_devices_count,
       current_connected_devices_count, license_maxusers, multi_tenancy_enabled,
-      active_users_count, users_count, groups_count, with_license } = this.state.sysInfo;
+      active_users_count, users_count, groups_count, with_license, seafile_version } = this.state.sysInfo;
     let { loading, errorMsg } = this.state;
 
     return (
@@ -109,6 +109,8 @@ class Info extends Component {
                     <a className="ml-1" href="https://download.seafile.com/published/seafile-manual/deploy_pro/migrate_from_seafile_community_server.md" target="_blank" rel="noreferrer">{gettext('Upgrade to Pro Edition')}</a>
                   </dd>
                 }
+                <dt className="info-item-heading">{gettext('Version Info')}</dt>
+                <dd className="info-item-content">{seafile_version}</dd>
                 <dt className="info-item-heading">{gettext('Libraries')} / {gettext('Files')}</dt>
                 <dd className="info-item-content">{repos_count} / {total_files_count}</dd>
 

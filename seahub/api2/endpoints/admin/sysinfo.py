@@ -23,7 +23,13 @@ try:
 except ImportError:
     MULTI_TENANCY = False
 
+try:
+    from seahub.settings import SEAFILE_VERSION
+except ImportError:
+    SEAFILE_VERSION = ""
+
 logger = logging.getLogger(__name__)
+
 
 class SysInfo(APIView):
     """Show system info.
@@ -157,7 +163,8 @@ class SysInfo(APIView):
             'license_to': license_dict.get('Name', ''),
             'total_storage': total_storage,
             'total_devices_count': total_devices_count,
-            'current_connected_devices_count': current_connected_devices_count
+            'current_connected_devices_count': current_connected_devices_count,
+            'seafile_version': SEAFILE_VERSION,
         }
 
         return Response(info)
