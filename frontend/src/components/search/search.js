@@ -16,6 +16,7 @@ const propTypes = {
   placeholder: PropTypes.string,
   onSearchedClick: PropTypes.func.isRequired,
   isPublic: PropTypes.bool,
+  isViewFile: PropTypes.bool,
 };
 
 const PER_PAGE = 10;
@@ -431,7 +432,7 @@ class Search extends Component {
       );
     }
     if (this.props.repoID) {
-      if (this.props.path && this.props.path !== '/') {
+      if (this.props.path && this.props.path !== '/' && !this.props.isViewFile) {
         return (
           <div className="search-types">
             <div className={`search-types-repo ${highlightIndex === 0 ? 'search-types-highlight' : ''}`} onClick={this.searchRepo} tabIndex={0}>

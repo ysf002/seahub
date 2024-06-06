@@ -16,6 +16,7 @@ const propTypes = {
   onSearchedClick: PropTypes.func.isRequired,
   searchPlaceholder: PropTypes.string,
   currentRepoInfo: PropTypes.object,
+  isViewFile: PropTypes.bool,
 };
 
 class CommonToolbar extends React.Component {
@@ -30,6 +31,7 @@ class CommonToolbar extends React.Component {
           repoID={repoID}
           placeholder={placeholder}
           onSearchedClick={this.props.onSearchedClick}
+          isViewFile={this.props.isViewFile}
           isPublic={false}
           path={path}
         />
