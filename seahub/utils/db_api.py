@@ -35,9 +35,6 @@ class SeafileDB:
         if not config.has_section('database'):
             return ''
 
-        if 'sqlite' in config.get('database', 'type'):
-            return ''
-
         db_name = config.get('database', 'db_name')
         if not db_name:
             raise Exception("Database name not configured.")

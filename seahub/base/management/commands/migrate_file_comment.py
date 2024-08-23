@@ -9,20 +9,19 @@ from django.db.utils import OperationalError
 from seahub.base.models import FileComment
 from seahub.tags.models import FileUUIDMap
 
+
 def random_key():
     return uuid.uuid4().hex[:6]
+
 
 class Command(BaseCommand):
     help = "Migrate base_filecomment schema which is changed in version 6.3."
 
     def migrate_schema(self):
         mysql = False
-        sqlite = False
         engine = settings.DATABASES['default']['ENGINE']
         if 'mysql' in engine:
             mysql = True
-        elif 'sqlite' in engine:
-            sqlite = True
         else:
             print('Unsupported database. Exit.')
             return
@@ -53,20 +52,6 @@ class Command(BaseCommand):
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8
             ''' % (random_key(), random_key(), random_key())
 
-                cursor.execute(sql)
-                print(sql)
-
-            if sqlite:
-                sql = '''CREATE TABLE "base_filecomment" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "author" varchar(255) NOT NULL, "comment" text NOT NULL, "created_at" datetime NOT NULL, "updated_at" datetime NOT NULL, "uuid_id" char(32) NOT NULL REFERENCES "tags_fileuuidmap" ("uuid"))
-                '''
-                cursor.execute(sql)
-                print(sql)
-
-                sql = '''CREATE INDEX "base_filecomment_%s" ON "base_filecomment" ("author")''' % random_key()
-                cursor.execute(sql)
-                print(sql)
-
-                sql = '''CREATE INDEX "base_filecomment_%s" ON "base_filecomment" ("uuid_id") ''' % random_key()
                 cursor.execute(sql)
                 print(sql)
 

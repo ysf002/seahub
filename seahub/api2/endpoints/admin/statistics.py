@@ -14,7 +14,7 @@ from django.http import HttpResponse
 
 from seaserv import ccnet_api
 
-from seahub.utils import get_file_ops_stats_by_day, IS_DB_SQLITE3, \
+from seahub.utils import get_file_ops_stats_by_day, \
         get_total_storage_stats_by_day, get_user_activity_stats_by_day, \
         is_pro_version, EVENTS_ENABLED, get_system_traffic_by_day, \
         get_all_users_traffic_by_month, get_all_orgs_traffic_by_month
@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 def check_parameter(func):
     def _decorated(view, request, *args, **kwargs):
-        if not EVENTS_ENABLED or (not is_pro_version() and IS_DB_SQLITE3):
+        if not EVENTS_ENABLED or not is_pro_version():
             return api_error(status.HTTP_404_NOT_FOUND, 'Events not enabled.')
         start_time = request.GET.get("start", "")
         end_time = request.GET.get("end", "")
@@ -47,13 +47,13 @@ def check_parameter(func):
         try:
             start_time = datetime.datetime.strptime(start_time,
                                                     "%Y-%m-%d %H:%M:%S")
-        except:
+        except Exception:
             error_msg = "Start time %s invalid" % start_time
             return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
         try:
             end_time = datetime.datetime.strptime(end_time,
                                                   "%Y-%m-%d %H:%M:%S")
-        except:
+        except Exception:
             error_msg = "End time %s invalid" % end_time
             return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
@@ -103,11 +103,11 @@ class FileOperationsView(APIView):
 
         res_data = []
         for k, v in list(ops_added_dict.items()):
-            res_data.append({'datetime': datetime_to_isoformat_timestr(k), 
-                         'added': v, 
-                         'visited': ops_visited_dict[k], 
-                         'deleted': ops_deleted_dict[k],
-                         'modified': ops_modified_dict[k]})
+            res_data.append({'datetime': datetime_to_isoformat_timestr(k),
+                             'added': v,
+                             'visited': ops_visited_dict[k],
+                             'deleted': ops_deleted_dict[k],
+                             'modified': ops_modified_dict[k]})
         return Response(sorted(res_data, key=lambda x: x['datetime']))
 
 
@@ -204,6 +204,7 @@ def get_init_data(start_time, end_time, init_data=0):
             res[dt] = init_data
     return res
 
+
 def get_time_offset():
     timezone_name = timezone.get_current_timezone_name()
     offset = pytz.timezone(timezone_name).localize(datetime.datetime.now()).strftime('%z')
@@ -219,7 +220,6 @@ class SystemUserTrafficView(APIView):
 
         if not request.user.admin_permissions.can_view_statistic():
             return api_error(status.HTTP_403_FORBIDDEN, 'Permission denied.')
-
 
         month = request.GET.get("month", "")
         if not month:
@@ -254,9 +254,9 @@ class SystemUserTrafficView(APIView):
         # get one more item than per_page, to judge has_next_page
         try:
             traffics = get_all_users_traffic_by_month(month_obj,
-                                                                     start,
-                                                                     start + per_page + 1,
-                                                                     order_by)
+                                                      start,
+                                                      start + per_page + 1,
+                                                      order_by)
         except Exception as e:
             logger.error(e)
             error_msg = 'Internal Server Error'
@@ -297,7 +297,6 @@ class SystemOrgTrafficView(APIView):
         if not request.user.admin_permissions.can_view_statistic():
             return api_error(status.HTTP_403_FORBIDDEN, 'Permission denied.')
 
-
         month = request.GET.get("month", "")
         if not month:
             error_msg = "month invalid."
@@ -331,9 +330,9 @@ class SystemOrgTrafficView(APIView):
         # get one more item than per_page, to judge has_next_page
         try:
             traffics = get_all_orgs_traffic_by_month(month_obj,
-                                                                    start,
-                                                                    start + per_page + 1,
-                                                                    order_by)
+                                                     start,
+                                                     start + per_page + 1,
+                                                     order_by)
         except Exception as e:
             logger.error(e)
             error_msg = 'Internal Server Error'
@@ -382,7 +381,7 @@ class SystemUserTrafficExcelView(APIView):
 
         try:
             month_obj = datetime.datetime.strptime(month, "%Y%m")
-        except:
+        except Exception:
             error_msg = "Month %s invalid" % month
             return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
@@ -394,9 +393,9 @@ class SystemUserTrafficExcelView(APIView):
             return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
 
         data_list = []
-        head = [_("Time"), _("User"), _("Web Download") + ('(MB)'), \
-                _("Sync Download") + ('(MB)'), _("Link Download") + ('(MB)'), \
-                _("Web Upload") + ('(MB)'), _("Sync Upload") + ('(MB)'), \
+        head = [_("Time"), _("User"), _("Web Download") + ('(MB)'),
+                _("Sync Download") + ('(MB)'), _("Link Download") + ('(MB)'),
+                _("Web Upload") + ('(MB)'), _("Sync Upload") + ('(MB)'),
                 _("Link Upload") + ('(MB)')]
 
         for data in res_data:
@@ -407,8 +406,8 @@ class SystemUserTrafficExcelView(APIView):
             sync_upload = byte_to_mb(data['sync_file_upload'])
             link_upload = byte_to_mb(data['link_file_upload'])
 
-            row = [month, data['user'], web_download, sync_download, \
-                    link_download, web_upload, sync_upload, link_upload]
+            row = [month, data['user'], web_download, sync_download,
+                   link_download, web_upload, sync_upload, link_upload]
 
             data_list.append(row)
 
@@ -457,7 +456,7 @@ class SystemUserStorageExcelView(APIView):
             space_quota_MB = byte_to_mb(user.space_quota)
 
             row = [user_email, user_name, user_contact_email,
-                    space_usage_MB, space_quota_MB]
+                   space_usage_MB, space_quota_MB]
 
             data_list.append(row)
 

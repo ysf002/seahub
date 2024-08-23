@@ -1,8 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Link } from '@gatsbyjs/reach-router';
-import { gettext, siteRoot, canInvitePeople, enableTC, sideNavFooterCustomHtml, additionalAppBottomLinks,
-  isDocs, isPro, isDBSqlite3, customNavItems, mediaUrl } from '../utils/constants';
+import { gettext, siteRoot, canInvitePeople, enableTC, sideNavFooterCustomHtml, additionalAppBottomLinks, isDocs, isPro, customNavItems, mediaUrl } from '../utils/constants';
 import { SIDE_PANEL_FOLDED_WIDTH, SUB_NAV_ITEM_HEIGHT } from '../constants';
 import Tip from './side-nav-icon-tip';
 import FilesSubNav from '../components/files-sub-nav';
@@ -111,7 +110,7 @@ class MainSideNavFolded extends React.Component {
   };
 
   render() {
-    let showActivity = isDocs || isPro || !isDBSqlite3;
+    let showActivity = isDocs || isPro;
     const { groupItems, isFilesSubNavShown } = this.state;
     return (
       <div className="side-nav side-nav-folded">

@@ -3,7 +3,7 @@ import ReactDom from 'react-dom';
 import MediaQuery from 'react-responsive';
 import { Modal } from 'reactstrap';
 import { Utils } from './utils/utils';
-import { isPro, isDBSqlite3, gettext } from './utils/constants';
+import { isPro, gettext } from './utils/constants';
 import { seafileAPI } from './utils/seafile-api';
 import toaster from './components/toast';
 import MainPanel from './components/main-panel';
@@ -176,7 +176,7 @@ class Settings extends React.Component {
                 {enableAddressBook && this.state.userInfo &&
                 <ListInAddressBook userInfo={this.state.userInfo} updateUserInfo={this.updateUserInfo} />}
                 <LanguageSetting />
-                {(isPro || !isDBSqlite3) && <EmailNotice />}
+                {isPro && <EmailNotice />}
                 {twoFactorAuthEnabled && <TwoFactorAuthentication />}
                 {enableWechatWork && <SocialLogin />}
                 {enableDingtalk && <SocialLoginDingtalk />}

@@ -27,12 +27,12 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': '%s/seahub/seahub.db' % PROJECT_ROOT,  # Or path to database file if using sqlite3.
-        'USER': '',                      # Not used with sqlite3.
-        'PASSWORD': '',                  # Not used with sqlite3.
-        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': '',
+        'USER': '',
+        'PASSWORD': '',
+        'HOST': '',
+        'PORT': '',
     }
 }
 
@@ -954,9 +954,6 @@ try:
 except ImportError:
     pass
 else:
-    # In server release, sqlite3 db file is <topdir>/seahub.db
-    DATABASES['default']['NAME'] = os.path.join(install_topdir, 'seahub.db')
-
     # In server release, gunicorn is used to deploy seahub
     INSTALLED_APPS.append('gunicorn')
 

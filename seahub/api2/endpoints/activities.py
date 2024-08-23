@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication
 
 from seahub.base.templatetags.seahub_tags import email2contact_email
-from seahub.utils import EVENTS_ENABLED, get_user_activities, is_pro_version, IS_DB_SQLITE3
+from seahub.utils import EVENTS_ENABLED, get_user_activities, is_pro_version
 from seahub.utils.timeutils import utc_datetime_to_isoformat_timestr
 from seahub.api2.utils import api_error
 from seahub.api2.throttling import UserRateThrottle
@@ -21,13 +21,14 @@ from seahub.drafts.models import Draft
 
 logger = logging.getLogger(__name__)
 
+
 class ActivitiesView(APIView):
     authentication_classes = (TokenAuthentication, SessionAuthentication)
     permission_classes = (IsAuthenticated, )
     throttle_classes = (UserRateThrottle, )
 
     def get(self, request, format=None):
-        if not EVENTS_ENABLED or (not is_pro_version() and IS_DB_SQLITE3):
+        if not EVENTS_ENABLED or not is_pro_version():
             events = None
             return api_error(status.HTTP_404_NOT_FOUND, 'Events not enabled.')
 
@@ -68,7 +69,7 @@ class ActivitiesView(APIView):
 
             try:
                 avatar_size = int(request.GET.get('avatar_size', 72))
-            except ValueError as e:
+            except ValueError:
                 avatar_size = 72
 
             url, is_default, date_uploaded = api_avatar_url(e.op_user, avatar_size)

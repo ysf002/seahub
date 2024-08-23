@@ -5,8 +5,7 @@ import Logo from '../../components/logo';
 import { gettext, siteRoot, isPro, otherPermission, canViewSystemInfo, canViewStatistic,
   canConfigSystem, canManageLibrary, canManageUser, canManageGroup, canViewUserLog,
   canViewAdminLog, constanceEnabled, multiTenancy, multiInstitution, sysadminExtraEnabled,
-  enableGuestInvitation, enableTermsAndConditions, enableFileScan, enableWorkWeixin, enableDingtalk,
-  enableShareLinkReportAbuse, isDBSqlite3 } from '../../utils/constants';
+  enableGuestInvitation, enableTermsAndConditions, enableFileScan, enableWorkWeixin, enableDingtalk, enableShareLinkReportAbuse } from '../../utils/constants';
 
 const propTypes = {
   isSidePanelClosed: PropTypes.bool.isRequired,
@@ -44,7 +43,7 @@ class SidePanel extends React.Component {
                   </Link>
                 </li>
                 }
-                {(isPro || !isDBSqlite3) && canViewStatistic &&
+                {isPro && canViewStatistic &&
                   <li className={`nav-item ${this.getActiveClass('statistic')}`}>
                     <Link className={`nav-link ellipsis ${this.getActiveClass('statistic')}`}
                       to={siteRoot + 'sys/statistics/file/'}
