@@ -3,15 +3,19 @@ import os
 import posixpath
 import timeit
 import tempfile
-import urllib.request, urllib.error, urllib.parse
+import urllib.request
+import urllib.error
+import urllib.parse
 import logging
 import subprocess
 from io import BytesIO
 import zipfile
 from fitz import open as fitz_open
-try: # Py2 and Py3 compatibility
+
+# Py2 and Py3 compatibility
+try:
     from urllib.request import urlretrieve
-except:
+except Exception:
     from urllib.request import urlretrieve
 
 from PIL import Image
@@ -21,18 +25,21 @@ from seaserv import get_file_id_by_path, get_repo, get_file_size, \
 from seahub.utils import gen_inner_file_get_url, get_file_type_and_ext
 from seahub.utils.file_types import VIDEO, XMIND, PDF
 from seahub.settings import THUMBNAIL_IMAGE_SIZE_LIMIT, \
-    THUMBNAIL_EXTENSION, THUMBNAIL_ROOT, THUMBNAIL_IMAGE_ORIGINAL_SIZE_LIMIT,\
+    THUMBNAIL_EXTENSION, THUMBNAIL_ROOT, THUMBNAIL_IMAGE_ORIGINAL_SIZE_LIMIT, \
     ENABLE_VIDEO_THUMBNAIL, THUMBNAIL_VIDEO_FRAME_TIME
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
 XMIND_IMAGE_SIZE = 1024
 
+
 def get_thumbnail_src(repo_id, size, path):
     return posixpath.join("thumbnail", repo_id, str(size), path.lstrip('/'))
 
+
 def get_share_link_thumbnail_src(token, size, path):
     return posixpath.join("thumbnail", token, str(size), path.lstrip('/'))
+
 
 def get_rotated_image(image):
 
@@ -76,6 +83,7 @@ def get_rotated_image(image):
         image = image.rotate(90, expand=True)
 
     return image
+
 
 def generate_thumbnail(request, repo_id, size, path):
     """ generate and save thumbnail if not exist
@@ -131,10 +139,14 @@ def generate_thumbnail(request, repo_id, size, path):
 
     if fileext.lower() == 'psd':
         return create_psd_thumbnails(repo, file_id, path, size,
-                                           thumbnail_file, file_size)
+                                     thumbnail_file, file_size)
 
-    token = seafile_api.get_fileserver_access_token(repo_id,
-            file_id, 'view', '', use_onetime=True)
+    if fileext.lower() == 'heic':
+        return create_heic_thumbnails(repo, file_id, path, size,
+                                      thumbnail_file, file_size)
+
+    token = seafile_api.get_fileserver_access_token(repo_id, file_id, 'view',
+                                                    '', use_onetime=True)
 
     if not token:
         return (False, 500)
@@ -147,6 +159,7 @@ def generate_thumbnail(request, repo_id, size, path):
     except Exception as e:
         logger.warning(e)
         return (False, 400)
+
 
 def create_psd_thumbnails(repo, file_id, path, size, thumbnail_file, file_size):
     try:
@@ -187,9 +200,10 @@ def create_psd_thumbnails(repo, file_id, path, size, thumbnail_file, file_size):
 
 
 def create_pdf_thumbnails(repo, file_id, path, size, thumbnail_file, file_size):
+
     t1 = timeit.default_timer()
-    token = seafile_api.get_fileserver_access_token(repo.id,
-            file_id, 'view', '', use_onetime=False)
+    token = seafile_api.get_fileserver_access_token(repo.id, file_id, 'view',
+                                                    '', use_onetime=False)
 
     if not token:
         return (False, 500)
@@ -220,11 +234,12 @@ def create_pdf_thumbnails(repo, file_id, path, size, thumbnail_file, file_size):
         os.unlink(tmp_path)
         return (False, 500)
 
+
 def create_video_thumbnails(repo, file_id, path, size, thumbnail_file, file_size):
 
     t1 = timeit.default_timer()
-    token = seafile_api.get_fileserver_access_token(repo.id,
-            file_id, 'view', '', use_onetime=False)
+    token = seafile_api.get_fileserver_access_token(repo.id, file_id, 'view',
+                                                    '', use_onetime=False)
 
     if not token:
         return (False, 500)
@@ -233,11 +248,12 @@ def create_video_thumbnails(repo, file_id, path, size, thumbnail_file, file_size
     tmp_path = str(os.path.join(tempfile.gettempdir(), '%s.png' % file_id[:8]))
 
     try:
-        subprocess.check_output(['ffmpeg', '-ss', str(THUMBNAIL_VIDEO_FRAME_TIME), '-vframes', '1', tmp_path, '-i', inner_path, '-nostdin'])
+        subprocess.check_output(['ffmpeg', '-ss', str(THUMBNAIL_VIDEO_FRAME_TIME),
+                                 '-vframes', '1', tmp_path, '-i', inner_path, '-nostdin'])
     except Exception as e:
         logger.error(e)
         return (False, 500)
-    
+
     t2 = timeit.default_timer()
     logger.debug('Create thumbnail of [%s](size: %s) takes: %s' % (path, file_size, (t2 - t1)))
 
@@ -249,6 +265,55 @@ def create_video_thumbnails(repo, file_id, path, size, thumbnail_file, file_size
         logger.error(e)
         os.unlink(tmp_path)
         return (False, 500)
+
+
+def create_heic_thumbnails(repo, file_id, path, size, thumbnail_file, file_size):
+
+    try:
+        import pyheif
+    except ImportError:
+        logger.error("Could not find pyheif installed. "
+                     "Please install by 'pip install heif'")
+        return (False, 500)
+
+    token = seafile_api.get_fileserver_access_token(repo.id, file_id, 'view',
+                                                    '', use_onetime=False)
+    if not token:
+        return (False, 500)
+
+    tmp_img_path = str(os.path.join(tempfile.gettempdir(), '%s.png' % file_id))
+    t1 = timeit.default_timer()
+
+    inner_path = gen_inner_file_get_url(token, os.path.basename(path))
+    tmp_file = os.path.join(tempfile.gettempdir(), file_id)
+    urlretrieve(inner_path, tmp_file)
+
+    heif_file = pyheif.read(tmp_file)
+    image = Image.frombytes(
+        heif_file.mode,
+        heif_file.size,
+        heif_file.data,
+        "raw",
+        heif_file.mode,
+        heif_file.stride,
+    )
+
+    image.save(tmp_img_path, format='PNG')
+
+    os.unlink(tmp_file)
+
+    t2 = timeit.default_timer()
+    logger.debug('Extract psd image [%s](size: %s) takes: %s' % (path, file_size, (t2 - t1)))
+
+    try:
+        ret = _create_thumbnail_common(tmp_img_path, thumbnail_file, size)
+        os.unlink(tmp_img_path)
+        return ret
+    except Exception as e:
+        logger.error(e)
+        os.unlink(tmp_img_path)
+        return (False, 500)
+
 
 def _create_thumbnail_common(fp, thumbnail_file, size):
     """Common logic for creating image thumbnail.
@@ -273,13 +338,13 @@ def _create_thumbnail_common(fp, thumbnail_file, size):
     image.save(thumbnail_file, THUMBNAIL_EXTENSION)
     return (True, 200)
 
+
 def extract_xmind_image(repo_id, path, size=XMIND_IMAGE_SIZE):
 
     # get inner path
     file_name = os.path.basename(path)
     file_id = seafile_api.get_file_id_by_path(repo_id, path)
-    fileserver_token = seafile_api.get_fileserver_access_token(repo_id,
-            file_id, 'view', '')
+    fileserver_token = seafile_api.get_fileserver_access_token(repo_id, file_id, 'view', '')
     inner_path = gen_inner_file_get_url(fileserver_token, file_name)
 
     # extract xmind image
@@ -288,6 +353,7 @@ def extract_xmind_image(repo_id, path, size=XMIND_IMAGE_SIZE):
     try:
         xmind_zip_file = zipfile.ZipFile(xmind_file_str, 'r')
     except Exception as e:
+        logger.error(e)
         return (False, 500)
     extracted_xmind_image = xmind_zip_file.read('Thumbnails/thumbnail.png')
     extracted_xmind_image_str = BytesIO(extracted_xmind_image)
@@ -304,6 +370,7 @@ def extract_xmind_image(repo_id, path, size=XMIND_IMAGE_SIZE):
     except Exception as e:
         logger.error(e)
         return (False, 500)
+
 
 def get_thumbnail_image_path(obj_id, image_size):
     thumbnail_dir = os.path.join(THUMBNAIL_ROOT, str(image_size))
