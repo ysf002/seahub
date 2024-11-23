@@ -4,8 +4,6 @@ import { I18nextProvider } from 'react-i18next';
 import i18n from './_i18n/i18n-sdoc-editor';
 import { Utils } from './utils/utils';
 import Loading from './components/loading';
-import {CollaboratorsProvider, EnableMetadataProvider, useCollaborators} from './metadata';
-import EmbeddedFileDetails from "./components/dirent-detail/embedded-file-details";
 import {SimpleViewer} from "@seafile/sdoc-editor";
 
 const { serviceURL, avatarURL, siteRoot, lang, mediaUrl, isPro } = window.app.config;
@@ -52,11 +50,7 @@ window.seafile = {
 ReactDom.render(
     <I18nextProvider i18n={i18n}>
       <Suspense fallback={<Loading/>}>
-        <EnableMetadataProvider repoID={repoID}>
-          <CollaboratorsProvider repoID={repoID}>
-            <SimpleViewer showComment={true}/>
-          </CollaboratorsProvider>
-        </EnableMetadataProvider>
+        <SimpleViewer showComment={true}/>
       </Suspense>
     </I18nextProvider>,
     document.getElementById('wrapper')

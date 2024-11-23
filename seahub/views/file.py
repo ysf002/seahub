@@ -906,7 +906,7 @@ def view_lib_file(request, repo_id, path):
         return_dict['err'] = "File preview unsupported"
         return render(request, template, return_dict)
 
-
+@repo_passwd_set_required
 def view_lib_sdoc_pdf_file(request, repo_id, path):
     # resource check
     repo = seafile_api.get_repo(repo_id)
@@ -917,7 +917,7 @@ def view_lib_sdoc_pdf_file(request, repo_id, path):
     file_id = seafile_api.get_file_id_by_path(repo_id, path)
     if not file_id:
         return render_error(request, _('File does not exist'))
-    print(1)
+
     # permission check
     access_token = request.GET.get('access-token')
     if not access_token:
@@ -929,7 +929,6 @@ def view_lib_sdoc_pdf_file(request, repo_id, path):
         return render_permission_error(request, _('Permission denied.'))
 
     if not payload.get('is_internal'):
-        print(3)
         return render_permission_error(request, _('Permission denied.'))
 
     username = payload.get('username') or ''
@@ -937,6 +936,7 @@ def view_lib_sdoc_pdf_file(request, repo_id, path):
     parent_dir = os.path.dirname(path)
     request.user.username = username
     permission = check_folder_permission(request, repo_id, parent_dir)
+    print(permission)
     if not permission:
         return convert_repo_path_when_can_not_view_file(request, repo_id, path)
 
@@ -1018,48 +1018,42 @@ def view_lib_sdoc_pdf_file(request, repo_id, path):
     return_dict['fileext'] = fileext
     return_dict['filetype'] = filetype
 
-    use_onetime = False if filetype in (VIDEO, AUDIO) else True
-    token = seafile_api.get_fileserver_access_token(repo_id,
-            file_id, 'view', username, use_onetime=use_onetime)
+    file_uuid = get_seadoc_file_uuid(repo, path)
+    return_dict['file_uuid'] = file_uuid
+    return_dict['assets_url'] = '/api/v2.1/seadoc/download-image/' + file_uuid
+    return_dict['seadoc_server_url'] = SEADOC_SERVER_URL
 
-    if filetype == SEADOC:
-        file_uuid = get_seadoc_file_uuid(repo, path)
-        return_dict['file_uuid'] = file_uuid
-        return_dict['assets_url'] = '/api/v2.1/seadoc/download-image/' + file_uuid
-        return_dict['seadoc_server_url'] = SEADOC_SERVER_URL
+    can_edit_file = True
+    if parse_repo_perm(permission).can_edit_on_web is False:
+        can_edit_file = False
+    elif is_locked and not locked_by_me:
+        can_edit_file = False
 
-        can_edit_file = True
-        if parse_repo_perm(permission).can_edit_on_web is False:
-            can_edit_file = False
-        elif is_locked and not locked_by_me:
-            can_edit_file = False
+    return_dict['can_edit_file'] = can_edit_file
 
-        return_dict['can_edit_file'] = can_edit_file
+    return_dict['is_freezed'] = False
+    if is_pro_version():
+        lock_info = seafile_api.get_lock_info(repo_id, path)
+        return_dict['is_freezed'] = lock_info is not None and lock_info.expire < 0
 
-        return_dict['is_freezed'] = False
-        if is_pro_version():
-            lock_info = seafile_api.get_lock_info(repo_id, path)
-            return_dict['is_freezed'] = lock_info is not None and lock_info.expire < 0
+    if is_pro_version() and can_edit_file:
+        try:
+            if not is_locked:
+                seafile_api.lock_file(repo_id, path, ONLINE_OFFICE_LOCK_OWNER,
+                                      int(time.time()) + 40 * 60)
+            elif locked_by_online_office:
+                seafile_api.refresh_file_lock(repo_id, path,
+                                              int(time.time()) + 40 * 60)
+        except Exception as e:
+            logger.error(e)
 
-        if is_pro_version() and can_edit_file:
-            try:
-                if not is_locked:
-                    seafile_api.lock_file(repo_id, path, ONLINE_OFFICE_LOCK_OWNER,
-                                          int(time.time()) + 40 * 60)
-                elif locked_by_online_office:
-                    seafile_api.refresh_file_lock(repo_id, path,
-                                                  int(time.time()) + 40 * 60)
-            except Exception as e:
-                logger.error(e)
-
-        seadoc_perm = 'rw' if can_edit_file else 'r'
-        return_dict['seadoc_access_token'] = gen_seadoc_access_token(file_uuid, filename, username, permission=seadoc_perm)
-        # revision
-        revision_info = is_seadoc_revision(file_uuid)
-        return_dict.update(revision_info)
-        print(111)
-        send_file_access_msg(request, repo, path, 'web')
-        return render(request, 'sdoc_page_view_react.html', return_dict)
+    seadoc_perm = 'rw' if can_edit_file else 'r'
+    return_dict['seadoc_access_token'] = gen_seadoc_access_token(file_uuid, filename, username, permission=seadoc_perm)
+    # revision
+    revision_info = is_seadoc_revision(file_uuid)
+    return_dict.update(revision_info)
+    print(111)
+    return render(request, 'sdoc_page_view_react.html', return_dict)
 
 def view_history_file_common(request, repo_id, ret_dict):
 
