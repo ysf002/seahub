@@ -925,7 +925,6 @@ def view_lib_sdoc_pdf_file(request, repo_id, path):
     try:
         payload = jwt.decode(access_token, settings.SEADOC_PRIVATE_KEY, algorithms=['HS256'])
     except:
-        print(2)
         return render_permission_error(request, _('Permission denied.'))
 
     if not payload.get('is_internal'):
@@ -936,14 +935,10 @@ def view_lib_sdoc_pdf_file(request, repo_id, path):
     parent_dir = os.path.dirname(path)
     request.user.username = username
     permission = check_folder_permission(request, repo_id, parent_dir)
-    print(permission)
     if not permission:
         return convert_repo_path_when_can_not_view_file(request, repo_id, path)
 
-    # download file or view raw file
     filename = os.path.basename(path)
-
-    org_id = request.user.org.org_id if is_org_context(request) else -1
     # basic file info
     return_dict = {
         'is_pro': is_pro_version(),
@@ -969,91 +964,22 @@ def view_lib_sdoc_pdf_file(request, repo_id, path):
         'file_download_url': gen_file_get_url_new(repo_id, path)
     }
 
-    if ENABLE_METADATA_MANAGEMENT:
-        return_dict['baidu_map_key'] = BAIDU_MAP_KEY
-        return_dict['google_map_key'] = GOOGLE_MAP_KEY
-        return_dict['google_map_id'] = GOOGLE_MAP_ID
-
-    # check whether file is starred
-    is_starred = is_file_starred(username, repo_id, path, org_id)
-    return_dict['is_starred'] = is_starred
-
-    # check file lock info
-    try:
-        is_locked, locked_by_me = check_file_lock(repo_id, path, username)
-    except Exception as e:
-        logger.error(e)
-        is_locked = False
-        locked_by_me = False
-
-    locked_by_online_office = if_locked_by_online_office(repo_id, path)
-
-    if is_pro_version() and permission == 'rw':
-        can_lock_unlock_file = True
-    else:
-        can_lock_unlock_file = False
-
-    return_dict['file_locked'] = is_locked
-    return_dict['locked_by_me'] = locked_by_me
-    return_dict['can_lock_unlock_file'] = can_lock_unlock_file
-
-    # fetch file contributors and latest contributor
-    try:
-        # get real path for sub repo
-        real_path = repo.origin_path + path if repo.origin_path else path
-        dirent = seafile_api.get_dirent_by_path(repo.store_id, real_path)
-        if dirent:
-            latest_contributor, last_modified = dirent.modifier, dirent.mtime
-        else:
-            latest_contributor, last_modified = None, 0
-    except Exception as e:
-        logger.error(e)
-        latest_contributor, last_modified = None, 0
-
-    return_dict['latest_contributor'] = latest_contributor
-    return_dict['last_modified'] = last_modified
-
-    # get file type and extention
-    filetype, fileext = get_file_type_and_ext(filename)
-    return_dict['fileext'] = fileext
-    return_dict['filetype'] = filetype
-
+    ##############
     file_uuid = get_seadoc_file_uuid(repo, path)
     return_dict['file_uuid'] = file_uuid
-    return_dict['assets_url'] = '/api/v2.1/seadoc/download-image/' + file_uuid
+    return_dict['assets_url'] = '/api/v2.1/seadoc/pdf-download-image/' + file_uuid
     return_dict['seadoc_server_url'] = SEADOC_SERVER_URL
 
-    can_edit_file = True
-    if parse_repo_perm(permission).can_edit_on_web is False:
-        can_edit_file = False
-    elif is_locked and not locked_by_me:
-        can_edit_file = False
-
-    return_dict['can_edit_file'] = can_edit_file
-
-    return_dict['is_freezed'] = False
-    if is_pro_version():
-        lock_info = seafile_api.get_lock_info(repo_id, path)
-        return_dict['is_freezed'] = lock_info is not None and lock_info.expire < 0
-
-    if is_pro_version() and can_edit_file:
-        try:
-            if not is_locked:
-                seafile_api.lock_file(repo_id, path, ONLINE_OFFICE_LOCK_OWNER,
-                                      int(time.time()) + 40 * 60)
-            elif locked_by_online_office:
-                seafile_api.refresh_file_lock(repo_id, path,
-                                              int(time.time()) + 40 * 60)
-        except Exception as e:
-            logger.error(e)
-
-    seadoc_perm = 'rw' if can_edit_file else 'r'
+    seadoc_perm = 'r'
     return_dict['seadoc_access_token'] = gen_seadoc_access_token(file_uuid, filename, username, permission=seadoc_perm)
+
     # revision
     revision_info = is_seadoc_revision(file_uuid)
     return_dict.update(revision_info)
-    print(111)
-    return render(request, 'sdoc_page_view_react.html', return_dict)
+
+    response = render(request, 'sdoc_page_view_react.html', return_dict)
+    response.set_cookie('access-token', access_token)
+    return response
 
 def view_history_file_common(request, repo_id, ret_dict):
 
