@@ -235,13 +235,17 @@ def sdoc_to_pdf(request, repo_id):
         response['Content-Disposition'] = f'attachment; filename={new_file_name}'
         pdf_dir = '/data/logs/tmp/convert-page-to-pdf'
         pdf_path = os.path.join(pdf_dir, '%s.pdf' % (doc_uuid))
-        # with open(pdf_path, 'r') as f:
-        #     binary_data = f.read()
-        #     base64_encoded = base64.b64encode(binary_data)
         response.write(open(pdf_path, 'rb').read())
-        # if os.path.exists(pdf_path):
-        #     os.remove(pdf_path)
         return response
     else:
         error_msg = 'Export %s failed.' % file_path
         return render_error(request, error_msg)
+
+    # res = sdoc_export_to_pdf(file_path, repo_id, username, doc_uuid,
+    #                                           download_url, src_type, dst_type)
+    # pdf_mime_type = 'application/pdf'
+    # response = HttpResponse(content_type=pdf_mime_type)
+    # new_file_name = quote(f'{filename[:-5]}.pdf')
+    # response['Content-Disposition'] = f'attachment; filename={new_file_name}'
+    # response.write(resp_with_pdf_file.content)
+    # return response

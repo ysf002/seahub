@@ -315,7 +315,7 @@ class DirentListItem extends React.Component {
     let filePath = this.getDirentPath(this.state.dirent);
     let exportToPdfUrl = serviceUrl + '/repo/sdoc_export_to_pdf/' + repoID + '/?file_path=' + filePath;
     window.location.href = exportToPdfUrl;
-  }
+  };
 
   exportSdoc = () => {
     const serviceUrl = window.app.config.serviceURL;

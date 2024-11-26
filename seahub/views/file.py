@@ -906,7 +906,7 @@ def view_lib_file(request, repo_id, path):
         return_dict['err'] = "File preview unsupported"
         return render(request, template, return_dict)
 
-@repo_passwd_set_required
+
 def view_lib_sdoc_pdf_file(request, repo_id, path):
     # resource check
     repo = seafile_api.get_repo(repo_id)
@@ -919,19 +919,19 @@ def view_lib_sdoc_pdf_file(request, repo_id, path):
         return render_error(request, _('File does not exist'))
 
     # permission check
-    access_token = request.GET.get('access-token')
-    if not access_token:
-        return render_permission_error(request, _('Permission denied.'))
-    try:
-        payload = jwt.decode(access_token, settings.SEADOC_PRIVATE_KEY, algorithms=['HS256'])
-    except:
-        return render_permission_error(request, _('Permission denied.'))
+    # access_token = request.GET.get('access-token')
+    # if not access_token:
+    #     return render_permission_error(request, _('Permission denied.'))
+    # try:
+    #     payload = jwt.decode(access_token, settings.SEADOC_PRIVATE_KEY, algorithms=['HS256'])
+    # except:
+    #     return render_permission_error(request, _('Permission denied.'))
 
-    if not payload.get('is_internal'):
-        return render_permission_error(request, _('Permission denied.'))
+    # if not payload.get('is_internal'):
+    #     return render_permission_error(request, _('Permission denied.'))
 
-    username = payload.get('username') or ''
-    # username = '69643729fcb9497d8daa2815d0158967@auth.local'
+    # username = payload.get('username') or ''
+    username = request.user.username
     parent_dir = os.path.dirname(path)
     request.user.username = username
     permission = check_folder_permission(request, repo_id, parent_dir)
@@ -951,16 +951,6 @@ def view_lib_sdoc_pdf_file(request, repo_id, path):
         'filename': filename,
         'file_perm': permission,
         'highlight_keyword': settings.HIGHLIGHT_KEYWORD,
-        'enable_watermark': ENABLE_WATERMARK,
-        'share_link_force_use_password': SHARE_LINK_FORCE_USE_PASSWORD,
-        'share_link_password_min_length': SHARE_LINK_PASSWORD_MIN_LENGTH,
-        'share_link_password_strength_level': SHARE_LINK_PASSWORD_STRENGTH_LEVEL,
-        'share_link_expire_days_default': SHARE_LINK_EXPIRE_DAYS_DEFAULT,
-        'share_link_expire_days_min': SHARE_LINK_EXPIRE_DAYS_MIN,
-        'share_link_expire_days_max': SHARE_LINK_EXPIRE_DAYS_MAX,
-        'can_download_file': parse_repo_perm(permission).can_download,
-        'seafile_collab_server': SEAFILE_COLLAB_SERVER,
-        'enable_metadata_management': ENABLE_METADATA_MANAGEMENT,
         'file_download_url': gen_file_get_url_new(repo_id, path)
     }
 
@@ -978,7 +968,7 @@ def view_lib_sdoc_pdf_file(request, repo_id, path):
     return_dict.update(revision_info)
 
     response = render(request, 'sdoc_page_view_react.html', return_dict)
-    response.set_cookie('access-token', access_token)
+    # response.set_cookie('access-token', access_token)
     return response
 
 def view_history_file_common(request, repo_id, ret_dict):

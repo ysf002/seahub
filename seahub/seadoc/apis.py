@@ -474,18 +474,20 @@ class SeadocToPDFDownloadImage(APIView):
 
         repo_id = uuid_map.repo_id
         # permission check
-        access_token = request.COOKIES.get('access-token')
-        try:
-            SEADOC_PRIVATE_KEY = getattr(settings, 'SEADOC_PRIVATE_KEY', '')
-            payload = jwt.decode(access_token, SEADOC_PRIVATE_KEY, algorithms=['HS256'])
-        except Exception as e:
-            logger.error(e)
-            return api_error(status.HTTP_403_FORBIDDEN, 'Permission denied')
-        if not payload.get('is_internal'):
-            return api_error(status.HTTP_403_FORBIDDEN, 'Permission denied')
+        # access_token = request.COOKIES.get('access-token')
+        # try:
+        #     SEADOC_PRIVATE_KEY = getattr(settings, 'SEADOC_PRIVATE_KEY', '')
+        #     payload = jwt.decode(access_token, SEADOC_PRIVATE_KEY, algorithms=['HS256'])
+        # except Exception as e:
+        #     logger.error(e)
+        #     return api_error(status.HTTP_403_FORBIDDEN, 'Permission denied')
+        # if not payload.get('is_internal'):
+        #     return api_error(status.HTTP_403_FORBIDDEN, 'Permission denied')
 
-        username = payload.get('username')
-        request.user.username = username
+        # username = payload.get('username')
+        # request.user.username = username
+        # #####
+        username = request.user.username
         file_path = posixpath.join(uuid_map.parent_path, uuid_map.filename)
         if not (username and check_folder_permission(request, repo_id, file_path)):
             error_msg = 'Permission denied.'

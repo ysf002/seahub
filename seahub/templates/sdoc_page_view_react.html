@@ -1,6 +1,8 @@
-{% extends 'file_view_react.html' %}
+{% extends 'base_for_react.html' %}
 {% load render_bundle from webpack_loader %}
 {% load seahub_tags i18n static %}
+
+{% block sub_title %}{{filename}} - {% endblock %}
 
 {% block extra_style %}
 <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}sdoc-editor/sdoc-editor-font.css" />
@@ -9,8 +11,25 @@
 {% endblock %}
 
 
-{% block extra_data %}
-    docPath: '{{ path|escapejs }}',
+{% block extra_script %}
+<script type="text/javascript">
+// overwrite the one in base_for_react.html
+window.app.pageOptions = {
+  server: '{{ service_url }}',
+  username: '{{ user.username|escapejs }}',
+  userNickName: '{{request.user.username|email2nickname|escapejs}}',
+  // for all types of files
+  fileName: '{{ filename|escapejs }}',
+  repoID: '{{ repo.id }}',
+  repoName: '{{ repo.name|escapejs }}',
+  filePath: '{{ path|escapejs }}',
+  filePerm: '{{ file_perm }}',
+  fileType: '{{ filetype }}',
+  parentDir: '{{ parent_dir|escapejs }}',
+  err: '{{ err }}',
+  seafileCollabServer: '{{seafile_collab_server}}',
+  contactEmail: "{{request.user.username|email2contact_email|escapejs}}",
+  docPath: '{{ path|escapejs }}',
     docName: '{{ filename|escapejs }}',
     docUuid: '{{ file_uuid }}',
     docPerm: '{{ file_perm }}',
@@ -18,9 +37,8 @@
     seadocAccessToken: '{{ seadoc_access_token }}',
     seadocServerUrl: '{{ seadoc_server_url }}',
     lang: '{{ lang }}'
-{% endblock %}
-
-{% block render_bundle %}
+};
+</script>
 <script type="text/javascript" src="{% static "scripts/lib/jquery.min.js" %}"></script>
 <script type="text/javascript" src="{{ MEDIA_URL }}js/base.js?t=1536127546642"></script>
 <script src="{{ MEDIA_URL }}js/init-scroll-bar.js" ></script>

@@ -1,14 +1,13 @@
-import React, {Suspense} from 'react';
+import React, { Suspense } from 'react';
 import ReactDom from 'react-dom';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './_i18n/i18n-sdoc-editor';
 import Loading from './components/loading';
-import {SimpleViewer} from "@seafile/sdoc-editor";
+import { SimpleViewer } from '@seafile/sdoc-editor';
 
 const { serviceURL, siteRoot, lang, mediaUrl } = window.app.config;
-const { username, name } = window.app.userInfo;
 const {
-  repoID, docPath, docName, docUuid, seadocAccessToken, seadocServerUrl, assetsUrl
+  repoID, docPath, docName, docUuid, seadocAccessToken, seadocServerUrl, assetsUrl, username, name
 } = window.app.pageOptions;
 
 window.seafile = {
@@ -29,10 +28,10 @@ window.seafile = {
 };
 
 ReactDom.render(
-    <I18nextProvider i18n={i18n}>
-      <Suspense fallback={<Loading/>}>
-        <SimpleViewer showComment={true}/>
-      </Suspense>
-    </I18nextProvider>,
-    document.getElementById('wrapper')
+  <I18nextProvider i18n={i18n}>
+    <Suspense fallback={<Loading/>}>
+      <SimpleViewer showComment={true}/>
+    </Suspense>
+  </I18nextProvider>,
+  document.getElementById('wrapper')
 );
