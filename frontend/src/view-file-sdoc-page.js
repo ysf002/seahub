@@ -3,34 +3,12 @@ import ReactDom from 'react-dom';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './_i18n/i18n-sdoc-editor';
 import Loading from './components/loading';
-import { SimpleViewer } from '@seafile/sdoc-editor';
-
-const { serviceURL, siteRoot, lang, mediaUrl } = window.app.config;
-const {
-  repoID, docPath, docName, docUuid, seadocAccessToken, seadocServerUrl, assetsUrl, username, name
-} = window.app.pageOptions;
-
-window.seafile = {
-  repoID,
-  docPath,
-  docName,
-  docUuid,
-  isOpenSocket: true,
-  serviceUrl: serviceURL,
-  accessToken: seadocAccessToken,
-  sdocServer: seadocServerUrl,
-  name,
-  username,
-  siteRoot,
-  assetsUrl,
-  lang,
-  mediaUrl
-};
+import SdocPrint from './pages/sdoc-print';
 
 ReactDom.render(
   <I18nextProvider i18n={i18n}>
     <Suspense fallback={<Loading/>}>
-      <SimpleViewer showComment={true}/>
+      <SdocPrint />
     </Suspense>
   </I18nextProvider>,
   document.getElementById('wrapper')
