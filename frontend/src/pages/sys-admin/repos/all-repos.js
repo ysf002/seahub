@@ -5,6 +5,8 @@ import { systemAdminAPI } from '../../../utils/system-admin-api';
 import toaster from '../../../components/toast';
 import SysAdminCreateRepoDialog from '../../../components/dialog/sysadmin-dialog/sysadmin-create-repo-dialog';
 import Content from './repos';
+import { eventBus } from '../../../components/common/event-bus';
+import { EVENT_BUS_TYPE } from '../../../components/common/event-bus-type';
 
 class AllRepos extends Component {
 
@@ -17,6 +19,7 @@ class AllRepos extends Component {
       pageInfo: {},
       perPage: 100,
       sortBy: '',
+      isCreateRepoDialogOpen: false,
     };
   }
 
@@ -30,6 +33,13 @@ class AllRepos extends Component {
     }, () => {
       this.getReposByPage(this.state.currentPage);
     });
+    this.unsubscribeOpenCreateRepoDialog = eventBus.subscribe(EVENT_BUS_TYPE.OPEN_CREATE_REPO_DIALOG, () => this.setState({ isCreateRepoDialogOpen: true }));
+  }
+
+  componentWillUnmount() {
+    if (this.unsubscribeOpenCreateRepoDialog) {
+      this.unsubscribeOpenCreateRepoDialog();
+    }
   }
 
   getReposByPage = (page) => {
@@ -102,8 +112,14 @@ class AllRepos extends Component {
     });
   };
 
+  toggleDialog = () => {
+    this.setState({
+      isCreateRepoDialogOpen: !this.state.isCreateRepoDialogOpen
+    });
+  };
+
   render() {
-    const { isCreateRepoDialogOpen } = this.props;
+    const { isCreateRepoDialogOpen } = this.state;
     return (
       <>
         <div className="main-panel-center flex-row">
@@ -128,7 +144,7 @@ class AllRepos extends Component {
         {isCreateRepoDialogOpen && (
           <SysAdminCreateRepoDialog
             createRepo={this.createRepo}
-            toggleDialog={this.props.toggleCreateRepoDialog}
+            toggleDialog={this.toggleDialog}
           />
         )}
       </>
