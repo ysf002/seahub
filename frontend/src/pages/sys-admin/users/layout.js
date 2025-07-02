@@ -6,25 +6,12 @@ import { gettext, siteRoot } from '../../../utils/constants';
 import UsersNav from './users-nav';
 import Users from './users';
 import Search from '../search';
-import User from './user-info';
 import AdminUsers from './admin-users';
 import LDAPImportedUsers from './ldap-imported-users';
 import LDAPUsers from './ldap-users';
-import SearchUsers from './search-users';
-import UserOwnedRepos from './user-repos';
-import UserSharedRepos from './user-shared-repos';
-import UserLinks from './user-links';
-import UserGroups from './user-groups';
 import UserNav from './user-nav';
 import { eventBus } from '../../../components/common/event-bus';
 import { EVENT_BUS_TYPE } from '../../../components/common/event-bus-type';
-
-const USERS_PATH_KEYS = [
-  'users',
-  'ldap',
-  'ldap-imported',
-  'admins',
-];
 
 const UsersLayout = ({ ...commonProps }) => {
   const [hasUserSelected, setHasUserSelected] = useState(false);
@@ -35,7 +22,7 @@ const UsersLayout = ({ ...commonProps }) => {
   const [isBatchAddAdminDialogOpen, setIsBatchAddAdminDialogOpen] = useState(false);
 
   const location = useLocation();
-  const { curTab, isAdmin, isLDAPImported, isSingleUser } = useMemo(() => {
+  const { curTab, isAdmin, isLDAPImported } = useMemo(() => {
     const path = location.pathname.split('/').filter(Boolean).pop();
     let curTab = path;
     if (path === 'users') {
@@ -45,8 +32,7 @@ const UsersLayout = ({ ...commonProps }) => {
     }
     const isAdmin = curTab === 'admin';
     const isLDAPImported = curTab === 'ldap-imported';
-    const isSingleUser = !USERS_PATH_KEYS.includes(path);
-    return { curTab, isAdmin, isLDAPImported, isSingleUser };
+    return { curTab, isAdmin, isLDAPImported };
   }, [location.pathname]);
 
   const onHasUserSelected = (hasSelected) => {
@@ -132,17 +118,11 @@ const UsersLayout = ({ ...commonProps }) => {
         }
       </MainPanelTopbar>
       <UsersNav currentItem={curTab} />
-      <Router primary={false}>
+      <Router className="d-flex overflow-hidden">
         <Users default {...commonProps} {...usersProps} />
         <AdminUsers path="admins" {...commonProps} {...usersProps} />
         <LDAPImportedUsers path="ldap-imported" {...commonProps} {...usersProps} />
         <LDAPUsers path="ldap" {...commonProps} {...usersProps} />
-        {/* <User path=":email/*" {...commonProps}>
-          <UserOwnedRepos path="owned-libraries" {...commonProps} />
-          <UserSharedRepos path="shared-libraries" {...commonProps} />
-          <UserLinks path="shared-links" {...commonProps} />
-          <UserGroups path="groups" {...commonProps} />
-        </User> */}
       </Router>
     </>
   );
