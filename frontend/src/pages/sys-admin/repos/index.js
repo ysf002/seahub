@@ -55,25 +55,24 @@ const Libraries = ({ children, ...commonProps }) => {
     eventBus.dispatch(EVENT_BUS_TYPE.OPEN_CLEAN_TRASH_DIALOG);
   }, []);
 
-  const showReposNav = path === 'all' || path === 'trash' || path === 'wikis' || path === 'system';
   return (
     <>
-      {path === 'all' && (
+      {path === 'all-libraries' && (
         <MainPanelTopbar search={getSearch()} { ...commonProps }>
           <Button className="btn btn-secondary operation-item" onClick={toggleCreateRepoDialog}>
             <i className="sf3-font sf3-font-enlarge text-secondary mr-1"></i>{gettext('New Library')}
           </Button>
         </MainPanelTopbar>
       )}
-      {path === 'trash' && (
+      {path === 'trash-libraries' && (
         <MainPanelTopbar {...commonProps}>
           <Button className="operation-item" onClick={toggleCleanTrashDialog}>{gettext('Clean')}</Button>
         </MainPanelTopbar>
       )}
-      {(path === 'wikis' || path === 'system') && (
+      {(path === 'all-wikis' || path === 'system-library') && (
         <MainPanelTopbar {...commonProps} />
       )}
-      {showReposNav && <ReposNav currentItem={path} />}
+      <ReposNav currentItem={path} />
       {children}
     </>
   );

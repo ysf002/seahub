@@ -229,13 +229,13 @@ class SysAdmin extends React.Component {
               <StatisticReport path="reports" />
               <StatisticMetrics path="metrics" />
             </StatisticLayout>
-            <Libraries path={`${siteRoot}sys/libraries/`} {...commonProps}>
-              <AllRepos path="all" {...commonProps} />
-              <AllWikis path="wikis" {...commonProps} />
-              <SystemRepo path="system" {...commonProps} />
-              <TrashRepos path="trash" {...commonProps} />
-              <DirView path=":repoID" {...commonProps} />
+            <Libraries path={`${siteRoot}sys/`} {...commonProps}>
+              <AllRepos path="all-libraries/" {...commonProps} />
+              <AllWikis path="all-wikis/" {...commonProps} />
+              <SystemRepo path="system-library/" {...commonProps} />
+              <TrashRepos path="trash-libraries/" {...commonProps} />
             </Libraries>
+            <DirView path={`${siteRoot}sys/libraries/:repoID`} {...commonProps} />
             <Devices path={`${siteRoot}sys/devices/`}>
               <DesktopDevices path="desktop" {...commonProps} />
               <MobileDevices path="mobile" {...commonProps} />
