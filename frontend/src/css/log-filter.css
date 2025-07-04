@@ -27,7 +27,7 @@
 
 .activity-modifier-selector-container {
   width: 320px;
-  background: #fff;
+  background: var(--bs-body-bg);
   border: 1px solid #e8e8e8;
   margin-top: 2px;
   z-index: 2;

@@ -80,7 +80,7 @@
 
 .review-side-panel {
   border-left: 1px solid #e6e6dd;
-  background-color: #fff;
+  background: var(--bs-body-bg);
   height: 100%;
 }
 
@@ -161,7 +161,7 @@
 }
 
 .markdown-viewer-render-content tr:nth-child(2n) {
-  background-color: #fff;
+  background: var(--bs-body-bg);
 }
 
 .review-side-panel-nav {
